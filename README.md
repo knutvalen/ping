@@ -5,7 +5,7 @@
   * `cd ping-server`
   * `npm install`
   * `npm start`
-* go to https://documenter.getpostman.com/view/3932141/RW89KpS3 and open the requests in Postman
+* go to https://documenter.getpostman.com/view/3932141/collection/RW89LpLo and open the requests in Postman
 * run this command in a new terminal `open ping-ios/ping.xcodeproj/`
 * open `RestController.swift` and update `let ip = "http://123.456.7.89:3000"` with your server ip address
 * in Xcode, run the iOS app (cmd + R)
