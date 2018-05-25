@@ -24,6 +24,8 @@ class RestController: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLS
     override init() {
         super.init()
         let configuration = URLSessionConfiguration.background(withIdentifier: identifier)
+        configuration.isDiscretionary = false
+        configuration.sessionSendsLaunchEvents = true
         backgroundUrlSession = URLSession(configuration: configuration, delegate: self, delegateQueue: nil)
     }
     
