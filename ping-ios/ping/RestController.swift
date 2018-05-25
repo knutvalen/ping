@@ -14,7 +14,7 @@ class RestController: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLS
     
     static let shared = RestController()
     let identifier = "no.qassql.ping.background"
-    let ip = "http://192.168.1.12:3000"
+    let ip = "http://123.456.7.89:3000"
     var backgroundUrlSession: URLSession?
     var backgroundSessionCompletionHandler: (() -> Void)?
     var onPing: (() -> ())?
