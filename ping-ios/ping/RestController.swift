@@ -16,8 +16,8 @@ class RestController: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLS
     let identifier = "no.qassql.ping.background"
     let ip = "http://192.168.1.12:3000"
     var backgroundUrlSession: URLSession?
-    var onPing: (() -> ())?
     var backgroundSessionCompletionHandler: (() -> Void)?
+    var onPing: (() -> ())?
     
     // MARK: - Initialization
     
@@ -25,10 +25,6 @@ class RestController: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLS
         super.init()
         let configuration = URLSessionConfiguration.background(withIdentifier: identifier)
         backgroundUrlSession = URLSession(configuration: configuration, delegate: self, delegateQueue: nil)
-    }
-    
-    deinit {
-        backgroundUrlSession?.finishTasksAndInvalidate()
     }
     
     // MARK: - Delegate functions
