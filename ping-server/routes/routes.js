@@ -18,6 +18,7 @@ let appRouter = function (app) {
 
     app.post("/ping", function (req, res) {
         let username = req.body.username;
+        console.log("ping " + username);
 
         res.status(200).send({
             status: 200,
@@ -27,6 +28,8 @@ let appRouter = function (app) {
     });
 
     app.get("/push", function (req, res) {
+        console.log("push");
+
         let token = req.headers.token;
         let notification = new apn.Notification();
         notification.contentAvailable = true;

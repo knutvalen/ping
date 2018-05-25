@@ -11,12 +11,11 @@ import UserNotifications
 import os.log
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate, URLSessionDelegate, UNUserNotificationCenterDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
 
     // MARK: - Properties
     
     var window: UIWindow?
-    var backgroundSessionCompletionHandler: (() -> Void)?
     
     // MARK: - Private functions
     
@@ -30,9 +29,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, URLSessionDelegate, UNUse
         }
     }
     
-    // MARK: - UIApplicationDelegate functions
+    // MARK: - Delegate functions
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
+        Login.shared.username = "foo"
         registerForPushNotifications()
         return true
     }
@@ -42,44 +42,30 @@ class AppDelegate: UIResponder, UIApplicationDelegate, URLSessionDelegate, UNUse
             return String(format: "%02.2hhx", data)
         }
         let token = tokenParts.joined()
-        os_log("AppDelegate didRegisterForRemoteNotificationsWithDeviceToken token: %@", token)
+        os_log("AppDelegate application(_:didRegisterForRemoteNotificationsWithDeviceToken:) token: %@", token)
     }
     
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
-        os_log("AppDelegate didFailToRegisterForRemoteNotificationsWithError error: %@", error.localizedDescription)
+        os_log("AppDelegate application(_:didFailToRegisterForRemoteNotificationsWithError:) error: %@", error.localizedDescription)
     }
     
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-        os_log("AppDelegate didReceiveRemoteNotification")
+        os_log("AppDelegate application(_:didReceiveRemoteNotification:fetchCompletionHandler:)")
             if let aps = userInfo["aps"] as? [String: AnyObject] {
             if aps["content-available"] as? Int == 1 {
-                
                 RestController.shared.onPing = { () in
                     RestController.shared.onPing = nil
                     completionHandler(.newData)
                     os_log("AppDelegate onPing")
                 }
                 
-                RestController.shared.pingBackground(login: Login.shared, urlSessionDelegate: self) // does not work
-//                RestController.shared.pingForeground(login: Login.shared) // works
+                RestController.shared.pingBackground(login: Login.shared)
+//                RestController.shared.pingForeground(login: Login.shared)
             }
         }
     }
     
     func application(_ application: UIApplication, handleEventsForBackgroundURLSession identifier: String, completionHandler: @escaping () -> Void) {
-        backgroundSessionCompletionHandler = completionHandler
-    }
-    
-    // MARK: - URLSessionDelegate functions
-    
-    func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
-        DispatchQueue.main.async {
-            if let completionHandler = self.backgroundSessionCompletionHandler {
-                self.backgroundSessionCompletionHandler = nil
-                completionHandler()
-            }
-            
-            RestController.shared.onPing?()
-        }
+        RestController.shared.backgroundSessionCompletionHandler = completionHandler
     }
 }

@@ -6,27 +6,58 @@
 //  Copyright © 2018 Knut Valen. All rights reserved.
 //
 import Foundation
+import os.log
 
-class RestController {
+class RestController: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLSessionDownloadDelegate {
     
     // MARK: - Properties
     
     static let shared = RestController()
-    let ip = "http://123.456.7.89:3000"
+    let identifier = "no.qassql.ping.background"
+    let ip = "http://192.168.1.12:3000"
     var backgroundUrlSession: URLSession?
-    var pingConfiguration: URLSessionConfiguration?
     var onPing: (() -> ())?
+    var backgroundSessionCompletionHandler: (() -> Void)?
     
     // MARK: - Initialization
     
-    init() {
-        pingConfiguration = URLSessionConfiguration.background(withIdentifier: "ping")
-        pingConfiguration!.isDiscretionary = false
-        pingConfiguration!.sessionSendsLaunchEvents = true
+    override init() {
+        super.init()
+        let configuration = URLSessionConfiguration.background(withIdentifier: identifier)
+        backgroundUrlSession = URLSession(configuration: configuration, delegate: self, delegateQueue: nil)
     }
     
     deinit {
-        self.backgroundUrlSession?.finishTasksAndInvalidate()
+        backgroundUrlSession?.finishTasksAndInvalidate()
+    }
+    
+    // MARK: - Delegate functions
+    
+    func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
+        DispatchQueue.main.async {
+            if let completionHandler = self.backgroundSessionCompletionHandler {
+                self.backgroundSessionCompletionHandler = nil
+                completionHandler()
+            }
+        }
+    }
+    
+    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        if let error = error {
+            os_log("RestController urlSession(_:task:didCompleteWithError:) error: %@", error.localizedDescription)
+        }
+    }
+    
+    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
+        do {
+            let data = try Data(contentsOf: location)
+            let respopnse = downloadTask.response
+            let error = downloadTask.error
+            
+            self.completionHandler(data: data, response: respopnse, error: error)
+        } catch {
+            os_log("RestController urlSession(_:downloadTask:didFinishDownloadingTo:) error: %@", error.localizedDescription)
+        }
     }
     
     // MARK: - Private functions
@@ -43,21 +74,15 @@ class RestController {
     
     // MARK: - Public functions
     
-    func pingBackground(login: Login, urlSessionDelegate: URLSessionDelegate) {
+    func pingBackground(login: Login) {
         guard let url = URL(string: ip + "/ping") else { return }
-        var request = URLRequest(url: url)
+        var request = URLRequest(url: url, cachePolicy: .reloadIgnoringCacheData, timeoutInterval: 20)
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpMethod = "POST"
         request.httpBody = login.serialize()
         
         if let backgroundUrlSession = backgroundUrlSession {
-            backgroundUrlSession.invalidateAndCancel()
-        }
-        
-        backgroundUrlSession = URLSession(configuration: RestController.shared.pingConfiguration!, delegate: urlSessionDelegate, delegateQueue: nil)
-        
-        if let backgroundUrlSession = backgroundUrlSession {
-            backgroundUrlSession.dataTask(with: request).resume()
+            backgroundUrlSession.downloadTask(with: request).resume()
         }
     }
     

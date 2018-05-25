@@ -28,7 +28,7 @@ class Login: Codable {
     // MARK: - Initialization
     
     init() {
-        self.username = "foobar"
+        self.username = ""
     }
     
     init(username: String) {
