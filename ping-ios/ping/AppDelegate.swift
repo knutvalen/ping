@@ -9,9 +9,10 @@
 import UIKit
 import UserNotifications
 import os.log
+import PushKit
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate, PKPushRegistryDelegate {
 
     // MARK: - Properties
     
@@ -34,38 +35,30 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         Login.shared.username = "foo"
         registerForPushNotifications()
+        let registry = PKPushRegistry(queue: nil)
+        registry.delegate = self
+        registry.desiredPushTypes = [PKPushType.voIP]
         return true
-    }
-    
-    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-        let tokenParts = deviceToken.map { data -> String in
-            return String(format: "%02.2hhx", data)
-        }
-        let token = tokenParts.joined()
-        os_log("AppDelegate application(_:didRegisterForRemoteNotificationsWithDeviceToken:) token: %@", token)
     }
     
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
         os_log("AppDelegate application(_:didFailToRegisterForRemoteNotificationsWithError:) error: %@", error.localizedDescription)
     }
     
-    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-        os_log("AppDelegate application(_:didReceiveRemoteNotification:fetchCompletionHandler:)")
-            if let aps = userInfo["aps"] as? [String: AnyObject] {
-            if aps["content-available"] as? Int == 1 {
-                RestController.shared.onPing = { () in
-                    RestController.shared.onPing = nil
-                    completionHandler(.newData)
-                    os_log("AppDelegate onPing")
-                }
-                
-                RestController.shared.pingBackground(login: Login.shared)
-//                RestController.shared.pingForeground(login: Login.shared)
-            }
-        }
-    }
-    
     func application(_ application: UIApplication, handleEventsForBackgroundURLSession identifier: String, completionHandler: @escaping () -> Void) {
         RestController.shared.backgroundSessionCompletionHandler = completionHandler
+    }
+    
+    func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
+        RestController.shared.onPing = { () in
+            RestController.shared.onPing = nil
+            os_log("AppDelegate pushRegistry(_:didReceiveIncomingPushWith:for:completion:) onPing")
+        }
+        
+        RestController.shared.pingBackground(login: Login.shared)
+    }
+    
+    func pushRegistry(_ registry: PKPushRegistry, didUpdate pushCredentials: PKPushCredentials, for type: PKPushType) {
+        os_log("AppDelegate pushRegistry(_:didUpdate:for:) token: %@", pushCredentials.token.map { String(format: "%02.2hhx", $0) }.joined())
     }
 }

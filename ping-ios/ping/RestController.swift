@@ -13,7 +13,6 @@ class RestController: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLS
     // MARK: - Properties
     
     static let shared = RestController()
-    let identifier = "no.qassql.ping.background"
     let ip = "http://123.456.7.89:3000"
     var backgroundUrlSession: URLSession?
     var backgroundSessionCompletionHandler: (() -> Void)?
@@ -23,7 +22,7 @@ class RestController: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLS
     
     override init() {
         super.init()
-        let configuration = URLSessionConfiguration.background(withIdentifier: identifier)
+        let configuration = URLSessionConfiguration.background(withIdentifier: "myIdentifier")
         configuration.isDiscretionary = false
         configuration.sessionSendsLaunchEvents = true
         backgroundUrlSession = URLSession(configuration: configuration, delegate: self, delegateQueue: nil)
@@ -82,17 +81,5 @@ class RestController: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLS
         if let backgroundUrlSession = backgroundUrlSession {
             backgroundUrlSession.downloadTask(with: request).resume()
         }
-    }
-    
-    func pingForeground(login: Login) {
-        guard let url = URL(string: ip + "/ping") else { return }
-        var request = URLRequest(url: url)
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpMethod = "POST"
-        request.httpBody = login.serialize()
-        
-        URLSession.shared.dataTask(with: request) { (data, response, error) in
-            return self.completionHandler(data: data, response: response, error: error)
-        }.resume()
     }
 }

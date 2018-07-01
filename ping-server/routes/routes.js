@@ -1,14 +1,11 @@
-let options = {
-    token: {
-        key: "AuthKey_5258794Z88.p8",
-        keyId: "5258794Z88",
-        teamId: "52Y2FSFMZD"
-    },
+let apnOptions = {
+    cert: "cert.pem",
+    key: "voip.pem",
     production: false
 };
 
 let apn = require('apn');
-let apnProvider = new apn.Provider(options);
+let apnProvider = new apn.Provider(apnOptions);
 
 let appRouter = function (app) {
 
@@ -33,10 +30,10 @@ let appRouter = function (app) {
         let token = req.headers.token;
         let notification = new apn.Notification();
         notification.contentAvailable = true;
-        notification.topic = "no.qassql.ping";
 
         apnProvider.send(notification, token).then( (result) => {
-            console.log(result);
+            if (result.failed.length > 0)
+                console.log('push error:', result.failed[0].response);
         });
 
         res.status(200).send({
