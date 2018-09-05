@@ -1,5 +1,5 @@
 # ping
-
+Proof of concept for doing RESTful requests in the background of an iOS device, initialized by a server using the Apple Push Notification service. 
 ## Get started
 * run these commands in your terminal:
   * `cd ping-server`
