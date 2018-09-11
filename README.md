@@ -1,13 +1,15 @@
 # ping
 Proof of concept for doing RESTful requests in the background of an iOS device, initialized by a server using the Apple Push Notification service. 
 ## Get started
-* run these commands in your terminal:
+* run these commands in the root directory:
   * `cd ping-server`
   * `npm install`
   * `npm start`
 * go to https://documenter.getpostman.com/view/3932141/collection/RW89LpLo and open the requests in Postman
-* run this command in a new terminal: `open ping-ios/ping.xcodeproj/`
+* run this command using a new terminal in the root directory: 
+    * `open ping-ios/ping.xcodeproj/`
 * open `RestController.swift` and update `let ip = "http://123.456.7.89:3000"` with your server ip address
+> Note: You can get your IP in the MacOS menu: Wi-Fi -> 'Open Network Preferences' -> 'Advanced' -> 'TCP/IP' -> 'IPv4 Address'
 * in Xcode, run the iOS app on a physical device (cmd + R)
 * copy the apn device token in the Xcode console and paste it in the `token` header in the Postman `push` request
 
